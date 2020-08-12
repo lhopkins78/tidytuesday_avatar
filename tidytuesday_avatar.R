@@ -4,6 +4,7 @@ library(ggthemes)
 library(cowplot)
 library(magick)
 library(ggrepel)
+library(ggiraph)
 
 tuesdata <- tidytuesdayR::tt_load('2020-08-11')
 tuesdata <- tidytuesdayR::tt_load(2020, week = 33)
@@ -13,11 +14,8 @@ avatar <- tuesdata$avatar
 avatar_books <- avatar %>% group_by(book, chapter, imdb_rating, director, writer) %>% summarise(n=n())
 
 avatar_analyse <- avatar_books %>% group_by(book) %>% 
-  summarise(avg_imdb=mean(imdb_rating, na.rm=T), count=n()) %>%
-  arrange(desc(avg_imdb))
-
-ggplot(avatar_books, aes(imdb_rating, fill=book)) + 
-  geom_density(alpha=0.5)
+  summarise(imdb_rating=mean(imdb_rating, na.rm=T), count=n()) %>%
+  arrange(desc(imdb_rating))
 
 director_rank <- avatar_books %>% group_by(director) %>% 
   summarise(median_imdb=median(imdb_rating, na.rm=T)) %>%
@@ -56,3 +54,27 @@ ggdraw() +
   draw_image(img_ava, scale=0.17, y=-0.35, x=0.3)
 ggsave("avatar.png", dpi="retina", width=18, height=11.5)
 
+book_levels <- c("Water","Earth", "Fire")
+
+p2 <- ggplot(avatar_books, aes(imdb_rating, fill=factor(book, levels=book_levels))) + 
+  geom_density(alpha=0.9) +
+  geom_vline(data=avatar_analyse, aes(xintercept=imdb_rating)) +
+  theme_few() +
+  theme(text= element_text(family="Avenir", size=25),
+        plot.title= element_text(family="Marker Felt Thin", size=30),
+        plot.caption= element_text(size=10),
+        axis.ticks.y=element_blank(),
+        axis.text.y=element_blank(),
+        plot.margin = unit(c(5.5,1,1,1), "cm"),
+        legend.position = "none") +
+  labs(x="IMDB rating", y="Density", fill="Book",
+       title="Distribution of IMDB scores by book",
+       caption="Source: Avery Robbins (appa package). Visualisation: @lauriejhopkins") +
+  scale_fill_manual(values=c("#3eacec","#06c258","#ff5f0d")) + 
+  facet_wrap(~factor(book, levels=book_levels), ncol=1)
+
+ggdraw() +
+  draw_plot(p2) +
+  draw_image(img_avatar, scale=0.25, y=0.4, x=0.3) +
+  draw_image(img_ava, scale=0.12, y=-0.3, x=-0.35)
+ggsave("avatar2.png", dpi="retina", width=18, height=11.5)
