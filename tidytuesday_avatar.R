@@ -4,7 +4,6 @@ library(ggthemes)
 library(cowplot)
 library(magick)
 library(ggrepel)
-library(ggiraph)
 
 tuesdata <- tidytuesdayR::tt_load('2020-08-11')
 tuesdata <- tidytuesdayR::tt_load(2020, week = 33)
